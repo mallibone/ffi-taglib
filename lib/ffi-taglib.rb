@@ -90,11 +90,11 @@ module TagLib
       raise ArgumentError unless test(?e, path)
 
       @ptr = if type
-              raise ArgumentError unless TypeRange.include? type
-              Native::Binding.file_new_type path, type
-            else
-              Native::Binding.file_new path
-            end
+        raise ArgumentError unless TypeRange.include? type
+        Native::Binding.file_new_type path, type
+      else
+        Native::Binding.file_new path
+      end
       @file = Native::File.new @ptr
       @path = path
       @need_save = false
@@ -173,7 +173,13 @@ module TagLib
         end
         if Native::Binding.respond_to? native_method
           raise IOError if @closed
-          return @memo[attribute] ||= Native::Binding.method(native_method).call(argument)
+          if @memo[attribute] 
+            return @memo[attribute]
+          else
+            res = Native::Binding.method(native_method).call(argument)
+            res.encode!(Encoding.default_external,Encoding.default_external) if res.class == String
+            return @memo[attribute] ||= res
+          end
         end
       end
       super
